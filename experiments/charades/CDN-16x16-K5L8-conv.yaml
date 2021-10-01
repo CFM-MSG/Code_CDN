@@ -1,0 +1,100 @@
+WORKERS: 8
+
+MODEL_DIR: ./checkpoints
+RESULT_DIR: ./results
+LOG_DIR: ./log
+DATA_DIR: ./data/Charades-STA
+TENSORBOARD_DIR: ./tensorboard
+
+DATASET:
+  NAME: Charades
+  VIS_INPUT_TYPE: vgg_rgb
+  NO_VAL: True
+  NUM_SAMPLE_CLIPS: 256
+  TARGET_STRIDE: 16
+  NORMALIZE: True
+  RANDOM_SAMPLING: False
+
+CUDNN:
+  DETERMINISTIC: False
+  BENCHMARK: True
+
+TRAIN:
+  BATCH_SIZE: 32
+  LR: 0.0001
+  WEIGHT_DECAY: 0.0000
+  MAX_EPOCH: 100
+  CONTINUE: False
+
+LOSS:
+  NAME: bce_rescale_loss
+  PARAMS:
+    MIN_IOU: 0.5
+    MAX_IOU: 0.9
+    BIAS: 0.0
+
+TEST:
+  BATCH_SIZE: 32
+  RECALL: 1,5
+  TIOU: 0.5,0.7
+  EVAL_TRAIN: True
+  NMS_THRESH: 0.5
+
+TAN:
+
+  TEXTUAL_MODULE:
+    NAME: TextualEncoding
+    PARAMS:
+      TXT_INPUT_SIZE: 300
+      TXT_HIDDEN_SIZE: 512
+      RNN:
+        NUM_LAYERS: 3
+        BIDIRECTIONAL: False
+
+  FRAME_MODULE:
+    NAME: SequentialFrameAttentionPool
+    PARAMS:
+      INPUT_SIZE: 4096
+      HIDDEN_SIZE: 512
+      KERNEL_SIZE: 16
+      V_LENS: 16
+      STRIDE: 16
+      ATTENTION: False
+      POSENCODE: False
+      POS_HIDDEN_SIZE: 64
+      SEMANTIC_ENHANCE: False
+      SEMANTIC_ENHANCE_NUM: 1
+      SQN_NUM: 3
+
+  PROP_MODULE:
+    NAME: SparsePropConv
+    PARAMS:
+      HIDDEN_SIZE: 512
+      NUM_SCALE_LAYERS: [16]
+      SEMANTIC_ENHANCE: False
+      SEMANTIC_ENHANCE_NUM: 1
+
+  FUSION_MODULE:
+    NAME: EasyFusion
+    PARAMS:
+      HIDDEN_SIZE: 512
+      TXT_INPUT_SIZE: 300
+      TXT_HIDDEN_SIZE: 512
+
+  MAP_MODULE:
+    NAME: DynamicMapResConv
+    PARAMS:
+      INPUT_SIZE: 512
+      HIDDEN_SIZES: [512, 512, 512, 512, 512, 512, 512, 512]
+      KERNEL_SIZES: [5, 5, 5, 5, 5, 5, 5, 5]
+      STRIDES: [1, 1, 1, 1, 1, 1, 1, 1]
+      PADDINGS: [2, 2, 2, 2, 2, 2, 2, 2]
+      DILATIONS: [1, 1, 1, 1, 1, 1, 1, 1]
+      COND_NUM: 4
+      NUM_WORKER: 8
+
+  PRED_INPUT_SIZE: 512
+
+MODEL:
+  NAME: MNET
+  CHECKPOINT: ./checkpoints/Charades/DMCTAN_vgg_rgb/2020-07-05-11-07/iter003483-0.4239-0.7965.pkl
